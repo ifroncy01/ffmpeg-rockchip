@@ -38,7 +38,8 @@ jobs:
       - name: Package binaries
         run: |
           mkdir -p pkg/usr/bin pkg/usr/lib pkg/usr/lib/pkgconfig pkg/usr/include
-          cp ffmpeg ffprobe ffplay pkg/usr/bin/
+          cp ffmpeg ffprobe pkg/usr/bin/
+          cp ffplay pkg/usr/bin/ 2>/dev/null || echo "  (ffplay not built, skipping)"
           # Copy shared libraries
           for lib in libavcodec libavdevice libavfilter libavformat libavutil \
                      libpostproc libswresample libswscale; do

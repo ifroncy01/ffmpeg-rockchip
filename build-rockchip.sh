@@ -39,7 +39,8 @@ if ! $SKIP_DEPS; then
     sudo apt-get install -y -qq \
         build-essential git pkg-config cmake meson ninja-build nasm yasm \
         libdrm-dev libx264-dev libx265-dev libvpx-dev \
-        libfdk-aac-dev libmp3lame-dev libopus-dev libvorbis-dev libass-dev
+        libfdk-aac-dev libmp3lame-dev libopus-dev libvorbis-dev libass-dev \
+        libsdl2-dev
 fi
 
 # 2. Build rockchip-mpp from source
