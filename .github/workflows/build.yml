@@ -1,0 +1,80 @@
+name: Build FFmpeg Rockchip
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build aarch64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build FFmpeg Rockchip
+        run: |
+          chmod +x build-rockchip.sh
+          sudo ./build-rockchip.sh 2>&1 | tee build-log.txt
+
+      - name: Verify build
+        run: |
+          echo "=== Enabled hwaccels ==="
+          LD_LIBRARY_PATH=. ./ffmpeg -hwaccels 2>&1
+          echo ""
+          echo "=== rkmpp decoders ==="
+          LD_LIBRARY_PATH=. ./ffmpeg -decoders 2>/dev/null | grep rkmpp || echo "  (none)"
+          echo ""
+          echo "=== rkmpp encoders ==="
+          LD_LIBRARY_PATH=. ./ffmpeg -encoders 2>/dev/null | grep rkmpp || echo "  (none)"
+          echo ""
+          echo "=== rkrga filters ==="
+          LD_LIBRARY_PATH=. ./ffmpeg -filters 2>/dev/null | grep rkrga || echo "  (none)"
+
+      - name: Package binaries
+        run: |
+          mkdir -p pkg/usr/bin pkg/usr/lib pkg/usr/lib/pkgconfig pkg/usr/include
+          cp ffmpeg ffprobe ffplay pkg/usr/bin/
+          # Copy shared libraries
+          for lib in libavcodec libavdevice libavfilter libavformat libavutil \
+                     libpostproc libswresample libswscale; do
+            find . -maxdepth 1 -name "${lib}.so*" -exec cp -a {} pkg/usr/lib/ \;
+          done
+          # Create version symlinks
+          cd pkg/usr/lib
+          for so in *.so.*; do
+            [ -f "$so" ] || continue
+            base="${so%.*}"
+            [ ! -e "$base" ] && ln -sf "$so" "$base"
+            base2="${base%.*}"
+            [ "$base2" != "$base" ] && [ ! -e "$base2" ] && ln -sf "$so" "$base2"
+          done
+          cd -
+          # Copy config header for reference
+          cp ffbuild/config.h pkg/usr/include/ 2>/dev/null || true
+          # Create version info
+          mkdir -p pkg/usr/share/ffmpeg
+          echo "FFmpeg Rockchip $(date +%Y%m%d-%H%M)" > pkg/usr/share/ffmpeg/version
+          # Package
+          tar -czf ffmpeg-rockchip-aarch64.tar.gz -C pkg .
+          echo "Package: $(du -h ffmpeg-rockchip-aarch64.tar.gz | cut -f1)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-rockchip-aarch64
+          path: |
+            ffmpeg-rockchip-aarch64.tar.gz
+            build-log.txt
+          retention-days: 90
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ffmpeg-rockchip-aarch64.tar.gz
+          generate_release_notes: true
