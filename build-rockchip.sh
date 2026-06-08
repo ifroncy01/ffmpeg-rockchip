@@ -48,20 +48,12 @@ if ! $SKIP_MPP && ! pkg-config --exists rockchip_mpp; then
     git clone --depth=1 https://github.com/rockchip-linux/mpp.git "$TMP_DIR/mpp"
     cd "$TMP_DIR/mpp"
 
-    # Find CMakeLists.txt
-    cmake_src="."
-    for d in build/linux/aarch64 .; do
-        if [ -f "$d/CMakeLists.txt" ]; then
-            cmake_src="$d"
-            break
-        fi
-    done
-
+    # Build in a separate build directory; CMakeLists.txt is at repo root
     mkdir -p build && cd build
     cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_LIBDIR=lib \
-          "$cmake_src"
+          ..
     make -j"$JOBS"
     sudo make install
     sudo ldconfig
