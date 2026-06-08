@@ -73,7 +73,7 @@ if ! $SKIP_RGA && ! pkg-config --exists librga; then
     sudo cp include/*.h "$PREFIX/include/rga/"
 
     # Install prebuilt library
-    local libdir="$PREFIX/lib"
+    libdir="$PREFIX/lib"
     [ -d "$PREFIX/lib/aarch64-linux-gnu" ] && libdir="$PREFIX/lib/aarch64-linux-gnu"
     sudo cp libs/Linux/gcc-aarch64/librga.so "$libdir/librga.so.2.1.0"
     sudo ln -sf librga.so.2.1.0 "$libdir/librga.so.2"
@@ -81,7 +81,7 @@ if ! $SKIP_RGA && ! pkg-config --exists librga; then
     sudo ldconfig
 
     # Create pkg-config file
-    local pcdir="$PREFIX/lib/pkgconfig"
+    pcdir="$PREFIX/lib/pkgconfig"
     [ -d "$PREFIX/lib/aarch64-linux-gnu/pkgconfig" ] && pcdir="$PREFIX/lib/aarch64-linux-gnu/pkgconfig"
     sudo mkdir -p "$pcdir"
     sudo tee "$pcdir/librga.pc" > /dev/null << EOF
