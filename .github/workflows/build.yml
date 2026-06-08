@@ -42,6 +42,7 @@ jobs:
       - name: Package binaries
         run: |
           mkdir -p pkg/usr/bin pkg/usr/lib pkg/usr/lib/pkgconfig pkg/usr/include
+          mkdir -p pkg/usr/share/applications pkg/usr/share/icons
           cp ffmpeg ffprobe pkg/usr/bin/
           cp ffplay pkg/usr/bin/ 2>/dev/null || echo "  (ffplay not built, skipping)"
           # Copy shared libraries
@@ -64,6 +65,8 @@ jobs:
           # Create version info
           mkdir -p pkg/usr/share/ffmpeg
           echo "FFmpeg Rockchip $(date +%Y%m%d-%H%M)" > pkg/usr/share/ffmpeg/version
+          # Desktop entry for ffplay
+          printf '[Desktop Entry]\nName=FFplay (Rockchip HW)\nGenericName=Media player\nComment=Hardware-accelerated media player with Rockchip MPP\nExec=ffplay -hwaccel rkmpp -fs -- %%f\nIcon=video-player\nTerminal=false\nType=Application\nCategories=AudioVideo;Player;\nMimeType=video/mp4;video/mpeg;video/x-matroska;video/x-msvideo;video/quicktime;video/webm;video/ogg;audio/mpeg;audio/ogg;\n' > pkg/usr/share/applications/ffplay-rockchip.desktop
           # Package
           tar -czf ffmpeg-rockchip-aarch64.tar.gz -C pkg .
           echo "Package: $(du -h ffmpeg-rockchip-aarch64.tar.gz | cut -f1)"
